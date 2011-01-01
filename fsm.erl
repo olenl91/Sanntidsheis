@@ -2,9 +2,9 @@
 -export([start/0, go_direction/1, event_floor_reached/1]).
 
 start() ->
-    register(fsm, spawn(fun() -> init() end)).
-
-
+    spawn(fun() - > init() end).
+%    spawn(?MODULE, init).
+    
 
 go_direction(up) ->
     fsm ! {go, up};
@@ -45,6 +45,7 @@ driving_down(LastFloor) ->
 idle(ThisFloor) ->
 						% request order from queue, every now and then,
     event_manager ! {set_motor_direction, stop},
+    event_manager ! {fsm_info, stopped, ThisFloor},
 						% set floor indicato
     receive
 	{go, up} ->
@@ -61,3 +62,4 @@ open_doors(ThisFloor) ->
     timer:sleep(3000),
     elev:elev_set_door_open_lamp(0),
     idle(ThisFloor).
+

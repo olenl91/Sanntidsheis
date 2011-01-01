@@ -7,7 +7,6 @@ start() ->
     register(event_manager, spawn(fun() -> manage_events() end)).
 
 
-%% husk at elevator_interface og fsm_interface ikke har samme PID og navn som elev/event_manager
 
 manage_events() ->
     receive
@@ -15,7 +14,13 @@ manage_events() ->
 	    fsm:event_floor_reached(Floor);
 	{set_motor_direction, Direction} ->
 	    io:format("set motor dir ~n"),
-	    elev_driver:set_motor_direction(Direction)
+	    elev_driver:set_motor_direction(Direction);
+	{fsm_info, stopped, 0} ->
+	    fsm:go_direction(up);
+	{fsm_info, stopped, 3} ->
+	    fsm:go_direction(down);
+	{fsm_info, stopped, Floor} ->
+	    fsm:go_direction(up)
     end,
     manage_events().
 			
