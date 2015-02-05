@@ -3,7 +3,7 @@
 -export([elev_init/1, elev_set_motor_direction/1, elev_set_door_open_lamp/1, elev_get_obstruction_signal/0, elev_get_stop_signal/0, elev_set_stop_lamp/1, elev_get_floor_sensor_signal/0, elev_set_floor_indicator/1, elev_get_button_signal/2, elev_set_button_lamp/3]).
 
 start() ->
-    spawn(?MODULE, init, ["simulator/elev_port"]).
+    spawn(?MODULE, init, ["driver/elev_port"]).
 stop() ->
     complex ! stop.
 
@@ -42,11 +42,11 @@ elev_set_button_lamp(Button, Floor, Value) ->
 
 
 call_port(Msg) ->
-    complex ! {call, self(), Msg},
-    receive
-	{complex, Result} ->
-	    Result
-    end.
+	complex ! {call, self(), Msg},
+    	receive
+		{complex, Result} ->
+	    	Result
+    	end.
 
 init(ExtPrg) ->
     register(complex, self()),

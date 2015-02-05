@@ -37,7 +37,7 @@ int elev_init(ElevatorType elevType) {
     int i;
 
     // Init hardware
-    if (!io_init(ET_simulation))
+    if (!io_init(elevType))
         return 0;
 
     // Zero all floor button lamps
