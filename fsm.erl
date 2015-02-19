@@ -62,6 +62,7 @@ driving_down(LastFloor) ->
 idle(ThisFloor) ->
 						% request order from queue, every now and then,
     elev:elev_set_motor_direction(0),
+    elev:elev_set_floor_indicator(ThisFloor),
     receive
 	{go, up} ->
 	    driving_up(ThisFloor);
@@ -73,5 +74,7 @@ idle(ThisFloor) ->
     end.
 
 open_doors(ThisFloor) ->
+    elev:elev_set_door_open_lamp(1),
     timer:sleep(3000),
+    elev:elev_set_door_open_lamp(0),
     idle(ThisFloor).
