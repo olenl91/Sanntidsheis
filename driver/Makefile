@@ -5,13 +5,13 @@ CC = gcc
 CFLAGS = -g -std=c99 -Wall
 
 # Linker flags go here.
-LDFLAGS = -lcomedi -pthread -lm
+LDFLAGS = -lcomedi -pthread -lm -lerl_interface -lei -lnsl
 
 # list of sources
-ELEVSRC = elev_port.c elev.c io.c
+ELEVSRC = elev_node.c elev.c io.c
 
 # program executable file name.
-TARGET = elev_port
+TARGET = elev_node
 
 # top-level rule, to compile everything.
 all: $(TARGET)
