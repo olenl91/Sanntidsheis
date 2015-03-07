@@ -8,10 +8,10 @@ CFLAGS = -g -std=c99 -Wall
 LDFLAGS = -lcomedi -pthread -lm -lerl_interface -lei -lnsl
 
 # list of sources
-ELEVSRC = elev_node.c elev.c io.c
+ELEVSRC = elev_port.c elev.c io.c
 
 # program executable file name.
-TARGET = elev_node
+TARGET = elev_port
 
 # top-level rule, to compile everything.
 all: $(TARGET)
