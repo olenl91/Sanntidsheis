@@ -4,7 +4,6 @@
 
 
 start() ->
-    register(caller, self()),
     spawn(?MODULE, init_port, ["driver/elev_port"]),
     timer:sleep(10),
     init(simulator),
@@ -71,16 +70,16 @@ loop(Port) ->
 	    Port ! {self(), {command, encode(Msg)}},
 	    loop(Port); 
 	{Port, {data, [11, 0, Floor]}} ->
-	    caller ! {new_order, up, Floor},
+	    event_manager ! {new_order, up, Floor},
 	    loop(Port);
 	{Port, {data, [11, 1, Floor]}} ->
-	    caller ! {new_order, down, Floor},
+	    event_manager ! {new_order, down, Floor},
 	    loop(Port);
 	{Port, {data, [11, 2, Floor]}} ->
-	    caller ! {new_order, command, Floor},
+	    event_manager ! {new_order, command, Floor},
 	    loop(Port);
 	{Port, {data, [12, Floor]}} ->
-	    caller ! {floor_reached, Floor},
+	    event_manager ! {floor_reached, Floor},
 	    loop(Port);
 	stop ->
 	    Port ! {self(), close},

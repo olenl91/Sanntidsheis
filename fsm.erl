@@ -1,49 +1,32 @@
 -module(fsm).
--export([start/0, go_direction/1]).
+-export([start/0, go_direction/1, event_floor_reached/1]).
 
 start() ->
-    spawn(fun() -> poll_sensor(255) end),
-    register(elevator, spawn(fun() -> init() end)).
-
-
-poll_sensor(LastFloor) ->
-    case elev:elev_get_floor_sensor_signal() of
-	LastFloor ->
-	    poll_sensor(LastFloor);
-	ThisFloor ->
-	    floor_reached(ThisFloor),
-	    timer:sleep(50),
-	    poll_sensor(ThisFloor)
-    end.
+    register(fsm, spawn(fun() -> init() end)).
 
 
 
 go_direction(up) ->
-    elevator ! {go, up};
+    fsm ! {go, up};
 go_direction(down) ->
-    elevator ! {go, down};
+    fsm ! {go, down};
 go_direction(open) ->
-    elevator ! {go, open}.
+    fsm ! {go, open}.
 
-
-floor_reached(255) ->
-    ok;
-floor_reached(Floor) ->    
-    io:format("Floor is reached ~B ~n", [Floor]),
-    elevator ! {floor_reached, Floor}.
-    
+event_floor_reached(Floor) ->
+    fsm ! {floor_reached, Floor}.
 
 
 
 init() ->
-    driving_up(0),
+    event_manager ! {set_motor_direction, up},
     receive
 	{floor_reached, Floor} ->
 	    idle(Floor)
     end.
 
 driving_up(LastFloor) ->
-    elev:elev_set_motor_direction(1),
+    event_manager ! {set_motor_direction, up},
     receive
 	{floor_reached, Floor} ->
 	    idle(Floor)
@@ -51,7 +34,7 @@ driving_up(LastFloor) ->
 
 
 driving_down(LastFloor) ->
-    elev:elev_set_motor_direction(2),
+    event_manager ! {set_motor_direction, down},
     receive
         {floor_reached, Floor} ->
 	    idle(Floor)
@@ -61,8 +44,8 @@ driving_down(LastFloor) ->
 
 idle(ThisFloor) ->
 						% request order from queue, every now and then,
-    elev:elev_set_motor_direction(0),
-    elev:elev_set_floor_indicator(ThisFloor),
+    event_manager ! {set_motor_direction, stop},
+						% set floor indicato
     receive
 	{go, up} ->
 	    driving_up(ThisFloor);
@@ -70,7 +53,7 @@ idle(ThisFloor) ->
 	    driving_down(ThisFloor);
 	{go, open} ->
 	    open_doors(ThisFloor)
-
+		
     end.
 
 open_doors(ThisFloor) ->
