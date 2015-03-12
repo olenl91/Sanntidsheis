@@ -4,7 +4,7 @@
 
 
 start() ->
-    spawn(?MODULE, init_port, ["driver/elev_port"]),
+    spawn(?MODULE, init_port, ["../driver/elev_port"]),
     timer:sleep(10),
     init(simulator),
     spawn(fun() -> poll_everything() end).
