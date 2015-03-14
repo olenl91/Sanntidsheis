@@ -2,7 +2,7 @@
 -export([start/0, go_direction/1, event_floor_reached/1]).
 
 start() ->
-    spawn(fun() -> init() end).
+    register(fsm, spawn(fun() -> init() end)).
 %    spawn(?MODULE, init).
     
 
