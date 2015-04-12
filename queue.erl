@@ -9,6 +9,20 @@
 -define(TURN_COST, ?NUMBER_OF_FLOORS).
 
 
+
+%% module interface
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+
+%% Process functions
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% functions for process to call
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
 add_order(Schedule, Order) -> % please implement guard for several similar orders, and maybe for unvalid directions ? 
     Schedule#schedule{orders=[Order|Schedule#schedule.orders]}.
 
@@ -28,7 +42,8 @@ remove_order(Schedule, Order) -> % maybe some guard so program doesn't crash whe
 
 
 
-
+%%% helper functions
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 	
 must_turn(ElevatorNextFloor, up, OrderFloor, up) when OrderFloor >= ElevatorNextFloor ->
