@@ -1,4 +1,4 @@
--module(scheduler).
+-module(queue).
 -compile(export_all).
 %-export(add_order/2, get/1, remove/2, get_next_order/2]).
 
@@ -9,7 +9,7 @@
 -define(TURN_COST, ?NUMBER_OF_FLOORS).
 
 
-add_order(Schedule, Order) ->
+add_order(Schedule, Order) -> % please implement guard for several similar orders, and maybe for unvalid directions ? 
     Schedule#schedule{orders=[Order|Schedule#schedule.orders]}.
 
 get_cheapest_order(Schedule) ->
@@ -23,6 +23,8 @@ get_cheapest_order(Schedule) ->
     {_LeastCost, CheapestOrder} = lists:min(CostOrderList),
     CheapestOrder.
 
+remove_order(Schedule, Order) -> % maybe some guard so program doesn't crash when trying to delete non existant order ? 
+    Schedule#schedule{orders = lists:delete(Order, Schedule#schedule.orders)}.
 
 
 
