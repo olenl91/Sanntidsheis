@@ -13,11 +13,40 @@
 %% module interface
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+add(Pid, OrderFloor, OrderDirection) ->
+    Pid ! {add_order, OrderFloor, OrderDirection, self()}, 
+    receive
+	ok ->
+	    ok
+    end.
 
+get_next_floor(Pid) ->
+    Pid ! {get_next_floor, self()},
+    receive
+	{floor, Floor} ->
+	    Floor
+    end.
 
 
 %% Process functions
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+start() ->
+    spawn(fun() -> loop(#schedule{elevator_next_floor = 1, elevator_direction = up}) end). %% bad initial value hack, please fix later
+		  
+
+loop(Schedule) ->
+    receive
+	{add_order, OrderFloor, OrderDirection, Caller} ->
+	    NewSchedule = add_order_to_schedule(Schedule, #order{floor = OrderFloor, direction = OrderDirection}),
+	    Caller ! ok,
+	    loop(NewSchedule);
+	{get_next_floor, Caller} ->
+	    CheapestOrder = get_cheapest_order_from_schedule(Schedule),	    
+	    Caller ! {floor, CheapestOrder#order.floor},
+	    loop(Schedule)
+    end.
+
 
 %% functions for process to call
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
