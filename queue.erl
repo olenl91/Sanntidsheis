@@ -27,12 +27,20 @@ get_next_floor(Pid) ->
 	    Floor
     end.
 
+update_elevator_info(Pid, ElevatorNextFloor, ElevatorDirection) ->
+    Pid ! {update_elevator, ElevatorNextFloor, ElevatorDirection, self()},
+    receive
+	ok ->
+	    ok
+    end.
+
+
 
 %% Process functions
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 start() ->
-    spawn(fun() -> loop(#schedule{elevator_next_floor = 1, elevator_direction = up}) end). %% bad initial value hack, please fix later
+    spawn(fun() -> loop(#schedule{}) end). %% bad initial value hack, please fix later
 		  
 
 loop(Schedule) ->
@@ -44,13 +52,19 @@ loop(Schedule) ->
 	{get_next_floor, Caller} ->
 	    CheapestOrder = get_cheapest_order_from_schedule(Schedule),	    
 	    Caller ! {floor, CheapestOrder#order.floor},
-	    loop(Schedule)
+	    loop(Schedule);
+	{update_elevator, ElevatorNextFloor, ElevatorDirection, Caller} ->
+	    NewSchedule = change_elevator_info_in_schedule(Schedule, ElevatorNextFloor, ElevatorDirection),
+	    Caller ! ok,
+	    loop(NewSchedule)
     end.
 
 
 %% functions for process to call
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+change_elevator_info_in_schedule(Schedule, ElevatorNextFloor, ElevatorDirection) ->
+    Schedule#schedule{elevator_next_floor = ElevatorNextFloor, elevator_direction = ElevatorDirection}.
 
 add_order_to_schedule(Schedule, Order) -> % please implement guard for several similar orders, and maybe for unvalid directions ? 
     Schedule#schedule{orders=[Order|Schedule#schedule.orders]}.
@@ -90,6 +104,10 @@ must_turn(ElevatorNextFloor, up, OrderFloor, command) when OrderFloor < Elevator
 must_turn(ElevatorNextFloor, down, OrderFloor, command) when OrderFloor =< ElevatorNextFloor ->
     false;
 must_turn(ElevatorNextFloor, down, OrderFloor, command) when OrderFloor > ElevatorNextFloor ->
+    true;
+must_turn(_ElevatorNextFloor, up, _OrderFloor, down) ->
+    true;
+must_turn(_ElevatorNextFloor, down, _OrderFloor, up) ->
     true;
 must_turn(_ElevatorNextFloor, _ElevatorDirection, _OrderFloor, _OrderDirection) ->
     erlang:error(badarg).
