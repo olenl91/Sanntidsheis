@@ -16,55 +16,63 @@ event_floor_reached(Pid) ->
     Pid ! floor_reached.
 
 
+%% Call backs
+%%%%%%%%%%%%%%%%%%%%%%%%
+motor_up(Listener) -> Listener ! {motor, up}.
+motor_down(Listener) -> Listener ! {motor, down}.
+motor_stop(Listener) -> Listener ! {motor, stop}.
+open_doors(Listener) -> Listener ! {doors, open}.
+close_doors(Listener) -> Listener ! {doors, close}.
+
 %% Process Functions
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
 start(Listener) ->
-    spawn(fun() -> init(Listener) end).
+    spawn(fun() -> state_init(Listener) end).
     
 
 %% States
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-init(Listener) ->
-    Listener ! {motor, up},
+state_init(Listener) ->
+    motor_up(Listener),
     receive
 	floor_reached ->
-	    idle(Listener)
+	    state_idle(Listener)
     end.
 
-driving_up(Listener) ->
-    Listener ! {motor, up},
+state_driving_up(Listener) ->
+    motor_up(Listener),
     receive
 	floor_reached ->
-	    idle(Listener)
+	    state_idle(Listener)
     end.
 
 
-driving_down(Listener) ->
-    Listener ! {motor, down},
+state_driving_down(Listener) ->
+    motor_down(Listener),
     receive
         floor_reached ->
-	    idle(Listener)
+	    state_idle(Listener)
     end.
 
 
-idle(Listener) ->
-    Listener ! {motor, stop},
+state_idle(Listener) ->
+    motor_stop(Listener),
     receive
 	up ->
-	    driving_up(Listener);
+	    state_driving_up(Listener);
 	down ->
-	    driving_down(Listener);
+	    state_driving_down(Listener);
 	open ->
-	    open_doors(Listener)		
+	    state_open_doors(Listener)		
     end.
 
-open_doors(Listener) ->
-    Listener ! {doors, open},
+state_open_doors(Listener) ->
+    open_doors(Listener),
     timer:sleep(3000),
-    Listener ! {doors, close},
-    idle(Listener).
+    close_doors(Listener),
+    state_idle(Listener).
 
