@@ -20,6 +20,13 @@ add(Pid, OrderFloor, OrderDirection) ->
 	    ok
     end.
 
+remove(Pid, OrderFloor, OrderDirection) ->
+    Pid ! {remove_order, OrderFloor, OrderDirection, self()},
+    receive
+	ok ->
+	    ok
+    end.
+
 get_next_floor(Pid) ->
     Pid ! {get_next_floor, self()},
     receive
@@ -34,6 +41,12 @@ update_elevator_info(Pid, ElevatorNextFloor, ElevatorDirection) ->
 	    ok
     end.
 
+get_schedule(Pid) -> %% for debug only
+    Pid ! {get_schedule, self()},
+    receive
+	X ->
+	    X
+    end.
 
 
 %% Process functions
@@ -45,8 +58,15 @@ start() ->
 
 loop(Schedule) ->
     receive
+	{get_schedule, Caller} -> %% for debug only
+	    Caller ! Schedule,
+	    loop(Schedule);
 	{add_order, OrderFloor, OrderDirection, Caller} ->
 	    NewSchedule = add_order_to_schedule(Schedule, #order{floor = OrderFloor, direction = OrderDirection}),
+	    Caller ! ok,
+	    loop(NewSchedule);
+	{remove_order, OrderFloor, OrderDirection, Caller} ->
+	    NewSchedule = remove_order_from_schedule(Schedule, #order{floor = OrderFloor, direction = OrderDirection}),
 	    Caller ! ok,
 	    loop(NewSchedule);
 	{get_next_floor, Caller} ->
@@ -69,6 +89,21 @@ change_elevator_info_in_schedule(Schedule, ElevatorNextFloor, ElevatorDirection)
 add_order_to_schedule(Schedule, Order) -> % please implement guard for several similar orders, and maybe for unvalid directions ? 
     Schedule#schedule{orders=[Order|Schedule#schedule.orders]}.
 
+remove_order_from_schedule(Schedule, Order) -> % should possibly remove all identical orders
+    FilterListCondition = fun(Element) ->
+				    if
+					Element == Order ->
+					    false;
+					Element /= Order ->
+					    true
+				    end
+			    end,
+    CurrentOrderList = Schedule#schedule.orders,
+    NewOrderList = lists:filter(FilterListCondition, CurrentOrderList), 
+    Schedule#schedule{orders = NewOrderList}.
+
+
+	
 get_cheapest_order_from_schedule(Schedule) ->
     IncludeCostInListFunction = fun(Order) ->
 					{get_cost(Schedule#schedule.elevator_next_floor, 
@@ -80,8 +115,6 @@ get_cheapest_order_from_schedule(Schedule) ->
     {_LeastCost, CheapestOrder} = lists:min(CostOrderList),
     CheapestOrder.
 
-remove_order_from_schedule(Schedule, Order) -> % maybe some guard so program doesn't crash when trying to delete non existant order ? 
-    Schedule#schedule{orders = lists:delete(Order, Schedule#schedule.orders)}.
 
 
 
