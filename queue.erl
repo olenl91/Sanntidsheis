@@ -23,10 +23,10 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-add_order(Schedule, Order) -> % please implement guard for several similar orders, and maybe for unvalid directions ? 
+add_order_to_schedule(Schedule, Order) -> % please implement guard for several similar orders, and maybe for unvalid directions ? 
     Schedule#schedule{orders=[Order|Schedule#schedule.orders]}.
 
-get_cheapest_order(Schedule) ->
+get_cheapest_order_from_schedule(Schedule) ->
     IncludeCostInListFunction = fun(Order) ->
 					{get_cost(Schedule#schedule.elevator_next_floor, 
 						  Schedule#schedule.elevator_direction,
@@ -37,7 +37,7 @@ get_cheapest_order(Schedule) ->
     {_LeastCost, CheapestOrder} = lists:min(CostOrderList),
     CheapestOrder.
 
-remove_order(Schedule, Order) -> % maybe some guard so program doesn't crash when trying to delete non existant order ? 
+remove_order_from_schedule(Schedule, Order) -> % maybe some guard so program doesn't crash when trying to delete non existant order ? 
     Schedule#schedule{orders = lists:delete(Order, Schedule#schedule.orders)}.
 
 
