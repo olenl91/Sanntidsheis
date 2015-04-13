@@ -34,8 +34,15 @@ get_next_floor(Pid) ->
 	    Floor
     end.
 
-update_elevator_info(Pid, ElevatorNextFloor, ElevatorDirection) ->
-    Pid ! {update_elevator, ElevatorNextFloor, ElevatorDirection, self()},
+floor_reached(Pid, Floor) ->
+    Pid ! {floor_reached, Floor, self()},
+    receive 
+	ok ->
+	    ok
+    end.
+
+floor_left(Pid, Direction) -> 
+    Pid ! {floor_left, Direction, self()},
     receive
 	ok ->
 	    ok
@@ -73,8 +80,12 @@ loop(Schedule) ->
 	    CheapestOrder = get_cheapest_order_from_schedule(Schedule),	    
 	    Caller ! {floor, CheapestOrder#order.floor},
 	    loop(Schedule);
-	{update_elevator, ElevatorNextFloor, ElevatorDirection, Caller} ->
-	    NewSchedule = change_elevator_info_in_schedule(Schedule, ElevatorNextFloor, ElevatorDirection),
+	{floor_reached, Floor, Caller} ->
+	    NewSchedule = change_next_floor_in_schedule(Schedule, Floor),
+	    Caller ! ok,
+	    loop(NewSchedule);
+	{floor_left, Direction, Caller} ->
+	    NewSchedule = update_direction_and_increment_floor(Schedule, Direction),
 	    Caller ! ok,
 	    loop(NewSchedule)
     end.
@@ -83,8 +94,14 @@ loop(Schedule) ->
 %% functions for process to call
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-change_elevator_info_in_schedule(Schedule, ElevatorNextFloor, ElevatorDirection) ->
-    Schedule#schedule{elevator_next_floor = ElevatorNextFloor, elevator_direction = ElevatorDirection}.
+change_next_floor_in_schedule(Schedule, ElevatorNextFloor) ->
+    Schedule#schedule{elevator_next_floor = ElevatorNextFloor}.
+
+update_direction_and_increment_floor(Schedule, up) ->
+    Schedule#schedule{elevator_next_floor = Schedule#schedule.elevator_next_floor + 1, elevator_direction = up};
+update_direction_and_increment_floor(Schedule, down) ->
+    Schedule#schedule{elevator_next_floor = Schedule#schedule.elevator_next_floor - 1, elevator_direction = down}.
+   
 
 add_order_to_schedule(Schedule, Order) -> % please implement guard for several similar orders, and maybe for unvalid directions ? 
     Schedule#schedule{orders=[Order|Schedule#schedule.orders]}.
