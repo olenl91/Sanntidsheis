@@ -42,8 +42,8 @@ floor_reached(Listener, Floor) -> Listener ! {floor_reached, Floor}.
 start(Listener) ->
     spawn(?MODULE, init_port, ["../driver/elev_port", Listener]),
     timer:sleep(10),
-    init(simulator).
-    %spawn(fun() -> poll_everything() end).
+    init(simulator),
+    spawn(fun() -> poll_everything() end).
 		  
 stop() ->
     driver ! stop.
@@ -85,11 +85,11 @@ loop(Port, Listener) ->
 	    exit(port_terminated)
     end.
 
-poll_everything(Listener) ->
+poll_everything() ->
     poll_order_buttons(),
     poll_floor_sensors(),
     timer:sleep(10),
-    poll_everything(Listener).
+    poll_everything().
 
 
 %% Helper functions
