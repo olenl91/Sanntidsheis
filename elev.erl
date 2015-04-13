@@ -2,27 +2,38 @@
 -export([start/0]).
 
 start() ->
-    elev_driver:start(),
-    fsm:start(),
-    register(event_manager, spawn(fun() -> manage_events() end)).
+    DriverManagerPID = spawn(fun() -> driver_manager() end),
+    FsmManagerPid = spawn(fun() -> fsm_manager_init() end),
 
+    elev_driver:start(DriverManagerPID),
+    FsmPID = fsm:start(FsmManagerPid),
+    register(fsm, FsmPID),
 
+    QueuePID = queue:start().
 
-manage_events() ->
+fsm_manager_init() -> % dirty hack, plz fix
+    timer:sleep(100), % wait for driver initalization
+    fsm_manager().
+fsm_manager() ->
     receive
-	{floor_reached, Floor} ->
-	    fsm:event_floor_reached(Floor);
-	{set_motor_direction, Direction} ->
-	    io:format("set motor dir ~n"),
-	    elev_driver:set_motor_direction(Direction);
-	{fsm_info, stopped, 0} ->
-	    fsm:go_direction(up);
-	{fsm_info, stopped, 3} ->
-	    fsm:go_direction(down);
-	{fsm_info, stopped, Floor} ->
-	    fsm:go_direction(up)
+	{motor, up} ->
+	    elev_driver:set_motor_direction(up);
+	{motor, down} ->
+	    elev_driver:set_motor_direction(down);
+	{motor, stop} ->
+	    elev_driver:set_motor_direction(stop);
+	{doors, open} ->
+	    elev_driver:set_door_open_lamp(on);
+	{doors, close} ->
+	    elev_driver:set_door_open_lamp(off)
     end,
-    manage_events().
-			
+    fsm_manager().
 
-    
+driver_manager() ->
+    receive
+	{new_order, Direcetion, Floor} ->
+	    lol;
+	{floor_reached, Floor} ->
+	    fsm:event_floor_reached(fsm)
+    end,
+    driver_manager().
