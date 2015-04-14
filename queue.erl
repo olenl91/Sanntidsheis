@@ -77,8 +77,7 @@ loop(Schedule) ->
 	    Caller ! ok,
 	    loop(NewSchedule);
 	{get_next_direction, Caller} ->
-	    CheapestOrder = get_cheapest_order_from_schedule(Schedule),	    
-	    Direction = direction(Schedule#schedule.elevator_next_floor, CheapestOrder#order.floor),
+	    Direction = get_next_direction_from_schedule(Schedule),
 	    Caller ! {direction, Direction},
 	    loop(Schedule);
 	{floor_reached, Floor, Caller} ->
@@ -121,8 +120,18 @@ remove_order_from_schedule(Schedule, Order) -> % should possibly remove all iden
     Schedule#schedule{orders = NewOrderList}.
 
 
+get_next_direction_from_schedule(Schedule) ->
+    case Schedule#schedule.orders of
+	[] ->
+	    stop;
+	_OrderList ->
+	    CheapestOrder = get_cheapest_order_from_schedule(Schedule),	    
+	    direction(Schedule#schedule.elevator_next_floor, CheapestOrder#order.floor)
+    end.
+
+
 	
-get_cheapest_order_from_schedule(Schedule) ->
+get_cheapest_order_from_schedule(Schedule) -> % maybe degrade to helper, maybe take orderlist and return order? Maybe do this in cost module?
     IncludeCostInListFunction = fun(Order) ->
 					{get_cost(Schedule#schedule.elevator_next_floor, 
 						  Schedule#schedule.elevator_direction,
@@ -170,7 +179,7 @@ must_turn(_ElevatorNextFloor, down, _OrderFloor, up) ->
 must_turn(_ElevatorNextFloor, _ElevatorDirection, _OrderFloor, _OrderDirection) ->
     erlang:error(badarg).
 
-
+% maybe make and move to "cost" module?
 get_cost(ElevatorNextFloor, ElevatorDirection, OrderFloor, OrderDirection) -> %% should probably not be named "get" since it's not a getter
     case must_turn(ElevatorNextFloor, ElevatorDirection, OrderFloor, OrderDirection) of
 	true ->
