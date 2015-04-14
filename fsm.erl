@@ -9,6 +9,7 @@ go_direction(Pid, down) -> Pid ! down;
 go_direction(Pid, open) -> Pid ! open.
 
 event_floor_reached(Pid) -> Pid ! floor_reached.
+event_new_order(Pid) -> Pid ! new_order.
 
 %% Call backs
 %%%%%%%%%%%%%%%%%%%%%%%%
@@ -17,6 +18,13 @@ motor_down(Listener) -> Listener ! {motor, down}.
 motor_stop(Listener) -> Listener ! {motor, stop}.
 open_doors(Listener) -> Listener ! {doors, open}.
 close_doors(Listener) -> Listener ! {doors, close}.
+
+request_new_direction(Listener) -> 
+    Listener ! {direction, request, self()},
+    receive
+	{direction, response, Direction} ->
+	    Direction
+    end.
 
 %% Process Functions
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -55,15 +63,21 @@ state_driving_down(Listener) ->
 
 state_idle(Listener) ->
     motor_stop(Listener),
-    receive
+    NewDirection = request_new_direction(Listener),
+    case NewDirection of
 	up ->
 	    state_driving_up(Listener);
 	down ->
 	    state_driving_down(Listener);
 	open ->
-	    state_open_doors(Listener)		
+	    state_open_doors(Listener);
+	stop ->
+	    receive
+		new_order ->
+		    state_idle(Listener)
+	    end
     end.
-
+    
 state_open_doors(Listener) ->
     open_doors(Listener),
     timer:sleep(3000),
