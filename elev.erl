@@ -44,7 +44,8 @@ driver_manager_init() -> % more dirty tricks
 driver_manager() ->
     receive
 	{new_order, Direction, Floor} ->
-	    queue:add(queue, Floor, Direction);
+	    queue:add(queue, Floor, Direction),
+	    fsm:event_new_order(fsm);
 	{floor_reached, Floor} ->
 	    fsm:event_floor_reached(fsm),
 	    queue:floor_reached(queue, Floor)
