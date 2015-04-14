@@ -140,7 +140,7 @@ get_cheapest_order_from_schedule(Schedule) ->
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 direction(ElevatorFloor, OrderFloor) when ElevatorFloor == OrderFloor->
-    stop;
+    open;
 direction(ElevatorFloor, OrderFloor) when ElevatorFloor < OrderFloor ->
     up;
 direction(ElevatorFloor, OrderFloor) when ElevatorFloor > OrderFloor ->
