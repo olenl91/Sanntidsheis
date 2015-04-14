@@ -32,6 +32,7 @@ fsm_manager() ->
 	{motor, stop} ->
 	    elev_driver:set_motor_direction(stop);
 	{doors, open} ->
+	    queue:make_stop(queue),
 	    elev_driver:set_door_open_lamp(on);
 	{doors, close} ->
 	    elev_driver:set_door_open_lamp(off)
