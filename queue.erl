@@ -3,7 +3,7 @@
 %-export(add_order/2, get/1, remove/2, get_next_order/2]).
 
 -record(order, {floor, direction}).
--record(schedule, {orders = [], elevator_next_floor, elevator_direction}).
+-record(schedule, {orders = [], elevator_next_floor, elevator_direction}). % next_floor is current or next floor, not current or last, maybe rename variable to make this clearer
 
 -define(NUMBER_OF_FLOORS, 4).
 -define(TURN_COST, ?NUMBER_OF_FLOORS).
@@ -48,6 +48,13 @@ floor_left(Pid, Direction) ->
 	    ok
     end.
 
+make_stop(Pid) ->
+    Pid ! {make_stop, self()},
+    receive
+	ok ->
+	    ok
+    end.
+
 get_schedule(Pid) -> %% for debug only
     Pid ! {get_schedule, self()},
     receive
@@ -65,6 +72,10 @@ start() ->
 
 loop(Schedule) ->
     receive
+	{make_stop, Caller} ->
+	    NewSchedule = update_schedule_at_stop(Schedule),
+	    Caller ! ok,
+	    loop(NewSchedule);
 	{get_schedule, Caller} -> %% for debug only
 	    Caller ! Schedule,
 	    loop(Schedule);
@@ -94,10 +105,33 @@ loop(Schedule) ->
 %% functions for process to call
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+
+% Removes all orders at floor, should possibly be extended to be more precice
+update_schedule_at_stop(Schedule) -> % and update direction, realy hard function to grasp, that's not good
+    ElevatorNextFloor = Schedule#schedule.elevator_next_floor,
+    SameDirection = Schedule#schedule.elevator_direction,
+    OtherDirection = other_direction(SameDirection),
+
+    %% calling something FunSchedule is probably not my brightest moment. Think it's better than Schedule which already is in Head though.
+    RemoveCommandOrder = fun(FunSchedule) ->
+				 remove_order_from_schedule(FunSchedule, #order{floor = ElevatorNextFloor, direction = command})
+			 end,
+    RemoveSameDirectionOrder = fun(FunSchedule) ->
+				       remove_order_from_schedule(FunSchedule, #order{floor = ElevatorNextFloor, direction = SameDirection})
+			       end,
+    RemoveOtherDirectionOrder = fun(FunSchedule) ->
+					remove_order_from_schedule(FunSchedule, #order{floor = ElevatorNextFloor, direction = OtherDirection})
+				end,
+
+    _NewSchedule = RemoveOtherDirectionOrder(RemoveCommandOrder(RemoveSameDirectionOrder(Schedule))).
+    
+
+
+
 change_next_floor_in_schedule(Schedule, ElevatorNextFloor) ->
     Schedule#schedule{elevator_next_floor = ElevatorNextFloor}.
 
-update_direction_and_increment_floor(Schedule, up) ->
+update_direction_and_increment_floor(Schedule, up) -> % should probably update instead of increment, also shorter more precise name is better
     Schedule#schedule{elevator_next_floor = Schedule#schedule.elevator_next_floor + 1, elevator_direction = up};
 update_direction_and_increment_floor(Schedule, down) ->
     Schedule#schedule{elevator_next_floor = Schedule#schedule.elevator_next_floor - 1, elevator_direction = down}.
@@ -148,6 +182,10 @@ get_cheapest_order_from_schedule(Schedule) -> % maybe degrade to helper, maybe t
 %%% helper functions
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+other_direction(up) -> down;
+other_direction(down) -> up.
+
+
 direction(ElevatorFloor, OrderFloor) when ElevatorFloor == OrderFloor->
     open;
 direction(ElevatorFloor, OrderFloor) when ElevatorFloor < OrderFloor ->
@@ -188,7 +226,7 @@ get_cost(ElevatorNextFloor, ElevatorDirection, OrderFloor, OrderDirection) -> %%
 	    abs(OrderFloor - ElevatorNextFloor)
     end.
 
-foreach_order(_Function, []) ->
+foreach_order(_Function, []) -> %% does the built in function map do this?
     [];
 foreach_order(Function, [LastOrder]) ->
     [Function(LastOrder)];
@@ -196,4 +234,3 @@ foreach_order(Function, OrderList) ->
     [Head|Tail] = OrderList,
     [Function(Head)|foreach_order(Function, Tail)].
     
-
