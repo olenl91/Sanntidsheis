@@ -27,11 +27,11 @@ remove(Pid, OrderFloor, OrderDirection) ->
 	    ok
     end.
 
-get_next_floor(Pid) ->
-    Pid ! {get_next_floor, self()},
+get_next_direction(Pid) ->
+    Pid ! {get_next_direction, self()},
     receive
-	{floor, Floor} ->
-	    Floor
+	{direction, Direction} ->
+	    Direction
     end.
 
 floor_reached(Pid, Floor) ->
@@ -76,9 +76,10 @@ loop(Schedule) ->
 	    NewSchedule = remove_order_from_schedule(Schedule, #order{floor = OrderFloor, direction = OrderDirection}),
 	    Caller ! ok,
 	    loop(NewSchedule);
-	{get_next_floor, Caller} ->
+	{get_next_direction, Caller} ->
 	    CheapestOrder = get_cheapest_order_from_schedule(Schedule),	    
-	    Caller ! {floor, CheapestOrder#order.floor},
+	    Direction = direction(Schedule#schedule.elevator_next_floor, CheapestOrder#order.floor),
+	    Caller ! {direction, Direction},
 	    loop(Schedule);
 	{floor_reached, Floor, Caller} ->
 	    NewSchedule = change_next_floor_in_schedule(Schedule, Floor),
@@ -138,6 +139,13 @@ get_cheapest_order_from_schedule(Schedule) ->
 %%% helper functions
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+direction(ElevatorFloor, OrderFloor) when ElevatorFloor == OrderFloor->
+    stop;
+direction(ElevatorFloor, OrderFloor) when ElevatorFloor < OrderFloor ->
+    up;
+direction(ElevatorFloor, OrderFloor) when ElevatorFloor > OrderFloor ->
+    down.
+
 	
 must_turn(ElevatorNextFloor, up, OrderFloor, up) when OrderFloor >= ElevatorNextFloor ->
     false;
@@ -163,7 +171,7 @@ must_turn(_ElevatorNextFloor, _ElevatorDirection, _OrderFloor, _OrderDirection) 
     erlang:error(badarg).
 
 
-get_cost(ElevatorNextFloor, ElevatorDirection, OrderFloor, OrderDirection) ->
+get_cost(ElevatorNextFloor, ElevatorDirection, OrderFloor, OrderDirection) -> %% should probably not be named "get" since it's not a getter
     case must_turn(ElevatorNextFloor, ElevatorDirection, OrderFloor, OrderDirection) of
 	true ->
 	    abs(OrderFloor - ElevatorNextFloor) + ?TURN_COST; 
