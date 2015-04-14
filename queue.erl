@@ -179,7 +179,8 @@ get_cost(ElevatorNextFloor, ElevatorDirection, OrderFloor, OrderDirection) -> %%
 	    abs(OrderFloor - ElevatorNextFloor)
     end.
 
-
+foreach_order(_Function, []) ->
+    [];
 foreach_order(Function, [LastOrder]) ->
     [Function(LastOrder)];
 foreach_order(Function, OrderList) ->
