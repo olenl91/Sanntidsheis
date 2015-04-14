@@ -1,5 +1,5 @@
 -module(elev_driver).
--export([start/1, stop/0, init_port/2]).
+-export([start/2, stop/0, init_port/2]).
 -export([init/1, set_motor_direction/1, set_door_open_lamp/1, set_stop_lamp/1, set_floor_indicator/1, set_button_lamp/3]).
 
 
@@ -39,10 +39,10 @@ floor_reached(Listener, Floor) -> Listener ! {floor_reached, Floor}.
 %% Process functions
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-start(Listener) ->
+start(Listener, ElevatorType) ->
     spawn(?MODULE, init_port, ["../driver/elev_port", Listener]),
     timer:sleep(10),
-    init(simulator),
+    init(ElevatorType),
     spawn(fun() -> poll_everything() end).
 		  
 stop() ->

@@ -1,11 +1,11 @@
 -module(elev).
--export([start/0]).
+-export([start/1]).
 
-start() ->
+start(ElevatorType) ->
     DriverManagerPID = spawn(fun() -> driver_manager_init() end),
     FsmManagerPid = spawn(fun() -> fsm_manager_init() end),
 
-    elev_driver:start(DriverManagerPID),
+    elev_driver:start(DriverManagerPID, ElevatorType),
     FsmPID = fsm:start(FsmManagerPid),
     register(fsm, FsmPID),
 
