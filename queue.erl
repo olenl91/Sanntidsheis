@@ -193,7 +193,7 @@ direction(ElevatorFloor, OrderFloor) when ElevatorFloor < OrderFloor ->
 direction(ElevatorFloor, OrderFloor) when ElevatorFloor > OrderFloor ->
     down.
 
-
+%must_turn(EleveatorNextFloor, ElevatorDirection, OrderFloor, OrderDirection)
 must_turn(ElevatorNextFloor, up, OrderFloor, up) when OrderFloor >= ElevatorNextFloor -> false;
 must_turn(ElevatorNextFloor, up, OrderFloor, up) when OrderFloor < ElevatorNextFloor -> true;
 must_turn(ElevatorNextFloor, down, OrderFloor, down) when OrderFloor =< ElevatorNextFloor -> false;
@@ -206,8 +206,6 @@ must_turn(ElevatorNextFloor, up, OrderFloor, down) when OrderFloor > ElevatorNex
 must_turn(ElevatorNextFloor, up, OrderFloor, down) when OrderFloor =< ElevatorNextFloor -> true;
 must_turn(ElevatorNextFloor, down, OrderFloor, up) when OrderFloor >= ElevatorNextFloor -> true;
 must_turn(ElevatorNextFloor, down, OrderFloor, up) when OrderFloor < ElevatorNextFloor-> false;
-must_turn(_ElevatorNextFloor, _ElevatorDirection, _OrderFloor, _OrderDirection) ->
-    erlang:error(badarg).
 
 % maybe make and move to "cost" module?
 get_cost(ElevatorNextFloor, ElevatorDirection, OrderFloor, OrderDirection) -> %% should probably not be named "get" since it's not a getter
