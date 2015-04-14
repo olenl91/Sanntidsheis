@@ -194,30 +194,18 @@ direction(ElevatorFloor, OrderFloor) when ElevatorFloor > OrderFloor ->
     down.
 
 
-must_turn(ElevatorNextFloor, up, OrderFloor, up) when OrderFloor >= ElevatorNextFloor ->
-    false;
-must_turn(ElevatorNextFloor, up, OrderFloor, up) when OrderFloor < ElevatorNextFloor ->
-    true;
-must_turn(ElevatorNextFloor, down, OrderFloor, down) when OrderFloor =< ElevatorNextFloor ->
-    false;
-must_turn(ElevatorNextFloor, down, OrderFloor, down) when OrderFloor > ElevatorNextFloor ->
-    true;
-must_turn(ElevatorNextFloor, up, OrderFloor, command) when OrderFloor >= ElevatorNextFloor ->
-    false;
-must_turn(ElevatorNextFloor, up, OrderFloor, command) when OrderFloor < ElevatorNextFloor ->
-    true;
-must_turn(ElevatorNextFloor, down, OrderFloor, command) when OrderFloor =< ElevatorNextFloor ->
-    false;
-must_turn(ElevatorNextFloor, down, OrderFloor, command) when OrderFloor > ElevatorNextFloor ->
-    true;
-must_turn(ElevatorNextFloor, up, OrderFloor, down) when OrderFloor > ElevatorNextFloor ->
-    false;
-must_turn(ElevatorNextFloor, up, OrderFloor, down) when OrderFloor =< ElevatorNextFloor ->
-    true;
-must_turn(ElevatorNextFloor, down, OrderFloor, up) when OrderFloor >= ElevatorNextFloor ->
-    true;
-must_turn(ElevatorNextFloor, down, OrderFloor, up) when OrderFloor < ElevatorNextFloor->
-    false;
+must_turn(ElevatorNextFloor, up, OrderFloor, up) when OrderFloor >= ElevatorNextFloor -> false;
+must_turn(ElevatorNextFloor, up, OrderFloor, up) when OrderFloor < ElevatorNextFloor -> true;
+must_turn(ElevatorNextFloor, down, OrderFloor, down) when OrderFloor =< ElevatorNextFloor -> false;
+must_turn(ElevatorNextFloor, down, OrderFloor, down) when OrderFloor > ElevatorNextFloor -> true;
+must_turn(ElevatorNextFloor, up, OrderFloor, command) when OrderFloor >= ElevatorNextFloor -> false;
+must_turn(ElevatorNextFloor, up, OrderFloor, command) when OrderFloor < ElevatorNextFloor -> true;
+must_turn(ElevatorNextFloor, down, OrderFloor, command) when OrderFloor =< ElevatorNextFloor -> false;
+must_turn(ElevatorNextFloor, down, OrderFloor, command) when OrderFloor > ElevatorNextFloor -> true;
+must_turn(ElevatorNextFloor, up, OrderFloor, down) when OrderFloor > ElevatorNextFloor -> false;
+must_turn(ElevatorNextFloor, up, OrderFloor, down) when OrderFloor =< ElevatorNextFloor -> true;
+must_turn(ElevatorNextFloor, down, OrderFloor, up) when OrderFloor >= ElevatorNextFloor -> true;
+must_turn(ElevatorNextFloor, down, OrderFloor, up) when OrderFloor < ElevatorNextFloor-> false;
 must_turn(_ElevatorNextFloor, _ElevatorDirection, _OrderFloor, _OrderDirection) ->
     erlang:error(badarg).
 
