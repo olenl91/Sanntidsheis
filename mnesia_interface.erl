@@ -1,13 +1,14 @@
 -module(mnesia_interface).
 -compile(export_all).
 
--record(orders, {order_number, button_type, floor}). % might need something about origin cause of command orders
+-record(order, {floor, direction}). % might need something about origin to handle internal orders
 
 
 install(Nodes) ->
-	mnesia:create_schema(Nodes),
-        rpc:multicall(Nodes, application, start, [mnesia]),
-        mnesia:create_table(orders,
-                        [{attributes, record_info(fields, orders)},
-                         {index, [#orders.floor]},
-                         {ram_copies, Nodes}]).
+    mnesia:create_schema(Nodes),
+    rpc:multicall(Nodes, application, start, [mnesia]),
+    mnesia:create_table(orders, [
+				 {record_name, order},
+				 {attributes, record_info(fields, order)},
+				 {ram_copies, Nodes}
+				]).
