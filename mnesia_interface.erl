@@ -19,3 +19,9 @@ add_order(Floor, Direction) ->
 				  mnesia:write(orders, #order{direction=Direction, floor=Floor}, write)
 			  end,
     mnesia:activity(transaction, AddOrderTransaction).
+
+remove_order(Floor, Direction) ->
+    RemoveOrderTransaction = fun() ->
+				     mnesia:delete_object(orders, #order{floor=Floor, direction=Direction}, write)
+			     end,
+    mnesia:activity(transaction, RemoveOrderTransaction).
