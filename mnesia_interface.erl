@@ -1,4 +1,4 @@
--module(mnesia_interface).
+-module(mnesia_interface). % should maybe be called something as order_storage or similar
 -compile(export_all).
 
 -record(order, {floor, direction}). % might need something about origin to handle internal orders
@@ -12,3 +12,10 @@ install(Nodes) ->
 				 {attributes, record_info(fields, order)},
 				 {ram_copies, Nodes}
 				]).
+
+
+add_order(Floor, Direction) ->
+    AddOrderTransaction = fun() ->
+				  mnesia:write(orders, #order{direction=Direction, floor=Floor}, write)
+			  end,
+    mnesia:activity(transaction, AddOrderTransaction).
