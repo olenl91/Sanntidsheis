@@ -205,7 +205,7 @@ must_turn(ElevatorNextFloor, down, OrderFloor, command) when OrderFloor > Elevat
 must_turn(ElevatorNextFloor, up, OrderFloor, down) when OrderFloor > ElevatorNextFloor -> false;
 must_turn(ElevatorNextFloor, up, OrderFloor, down) when OrderFloor =< ElevatorNextFloor -> true;
 must_turn(ElevatorNextFloor, down, OrderFloor, up) when OrderFloor >= ElevatorNextFloor -> true;
-must_turn(ElevatorNextFloor, down, OrderFloor, up) when OrderFloor < ElevatorNextFloor-> false;
+must_turn(ElevatorNextFloor, down, OrderFloor, up) when OrderFloor < ElevatorNextFloor -> false.
 
 % maybe make and move to "cost" module?
 get_cost(ElevatorNextFloor, ElevatorDirection, OrderFloor, OrderDirection) -> %% should probably not be named "get" since it's not a getter
