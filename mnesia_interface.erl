@@ -26,3 +26,18 @@ remove_order(Floor, Direction) ->
 				     mnesia:delete_object(orders, #order{floor=Floor, direction=Direction}, write)
 			     end,
     mnesia:activity(transaction, RemoveOrderTransaction).
+
+is_order(Floor, Direction) ->
+    OrderList = get_order_list(),
+    lists:member(#order{floor = Floor, direction = Direction}, OrderList).
+
+
+
+%% helper functions
+%%%%%%%%%%%%%%%%%%%    
+
+get_order_list() ->
+    GetAllOrdersTransaction = fun() ->
+				      mnesia:match_object(orders, #order{floor='_', direction='_'}, read)
+			      end,
+    mnesia:activity(transaction, GetAllOrdersTransaction).
