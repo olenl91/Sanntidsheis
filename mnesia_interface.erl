@@ -10,7 +10,8 @@ install(Nodes) ->
     mnesia:create_table(orders, [
 				 {record_name, order},
 				 {attributes, record_info(fields, order)},
-				 {ram_copies, Nodes}
+				 {ram_copies, Nodes},
+				 {type, bag}
 				]).
 
 
