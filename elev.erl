@@ -62,6 +62,30 @@ driver_manager() ->
 %% Helper functions (should maybe not be helper functions in this module?)
 %%%%%%%%%%%%%%%%%%%%%%%
 
+%Fun(Floor, Direction)
+foreach_button(Fun) -> % This is somewhat a mess, atleast make better names for Fun and F and shizzle. Consider to rewrite.
+    TopFloorButtonTypes = lists:delete(up, ?BUTTON_TYPES),
+    BottomFloorButtonTypes = lists:delete(down, ?BUTTON_TYPES),
+    OtherFloorButtonTypes = ?BUTTON_TYPES,
+    
+    ForEachDirection = fun(F, Floor) -> %F(Direction)
+			       if
+				   Floor == 0 ->
+				       lists:foreach(F, BottomFloorButtonTypes);
+				   Floor == ?NUMBER_OF_FLOORS-1 ->
+				       lists:foreach(F, TopFloorButtonTypes);
+				   (Floor > 0) and (Floor =< ?NUMBER_OF_FLOORS-1) ->
+				       lists:foreach(F, OtherFloorButtonTypes)
+			       end
+		       end,
+
+    DoFunForEachDirection = fun(Floor) ->
+				    ForEachDirection(fun(Direction) -> Fun(Floor, Direction) end, Floor)
+			    end,
+
+    foreach_floor(DoFunForEachDirection).
+			  
+    
     
 %F(Floor)
 foreach_floor(F) -> %should maybe (probably) me moved to somewhere else
