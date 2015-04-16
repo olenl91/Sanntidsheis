@@ -61,14 +61,24 @@ get_schedule(Pid) -> %% for debug only
 	X ->
 	    X
     end.
+%% call backs
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+order_served(Floor, Direction) ->
+    Listener = get(listener),
+    Listener ! {order_served, Floor, Direction}.
 
 
 %% Process functions
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-start() ->
-    spawn(fun() -> loop(#schedule{}) end). %% bad initial value hack, please fix later
-		  
+start(Listener) ->
+    spawn(fun() -> init(Listener) end). %% bad initial value hack, please fix later
+    
+
+init(Listener) ->
+    put(listener, Listener),
+    loop(#schedule{}).
 
 loop(Schedule) ->
     receive
@@ -123,6 +133,9 @@ update_schedule_at_stop(Schedule) -> % and update direction, realy hard function
 					remove_order_from_schedule(FunSchedule, #order{floor = ElevatorNextFloor, direction = OtherDirection})
 				end,
 
+    order_served(ElevatorNextFloor, command),
+    order_served(ElevatorNextFloor, SameDirection),
+    order_served(ElevatorNextFloor, OtherDirection),
     _NewSchedule = RemoveOtherDirectionOrder(RemoveCommandOrder(RemoveSameDirectionOrder(Schedule))).
     
 

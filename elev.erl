@@ -18,7 +18,8 @@ start(ElevatorType) ->
 
     spawn(fun() -> button_light_manager() end),
 
-    QueuePID = queue:start(),
+    QueueManagerPID = spawn(fun() -> queue_manager() end),
+    QueuePID = queue:start(QueueManagerPID),
     register(queue, QueuePID),
     
     SchedulerPID = scheduler:start(),
@@ -94,7 +95,14 @@ scheduler_manager() ->
 	    queue:remove(queue, Floor, Direction)
     end,
     scheduler_manager().
-			    
+
+queue_manager() ->			    
+    receive
+	{order_served, Floor, Direction} ->
+	    order_db:remove_order(Floor, Direction) %no guarantee for this action will happen
+    end,
+    queue_manager().
+
 		
 
 
