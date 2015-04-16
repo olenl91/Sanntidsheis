@@ -54,7 +54,8 @@ driver_manager_init() -> % more dirty tricks
 driver_manager() ->
     receive
 	{new_order, Direction, Floor} ->
-	    queue:add(queue, Floor, Direction),
+	    queue:add(queue, Floor, Direction), % this needs to be edited when scheduler is made
+	    order_db:add_order(Floor, Direction),
 	    fsm:event_new_order(fsm);
 	{floor_reached, Floor} ->
 	    fsm:event_floor_reached(fsm),
