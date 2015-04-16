@@ -9,6 +9,12 @@
 %% Module interface
 %%%%%%%%%%%%%%%%%%%
 
+schedule_order(SchedulerPID, Floor, Direction) ->
+    SchedulerPID ! {schedule_order, Floor, Direction, self()}, 
+    receive {scheduling_result, SchedulingResult} ->
+	    SchedulingResult
+    end.
+
 %CostCalculationFunctin(Floor, Direction)
 request_order(SchedulerPID, CostCalculationFunction) -> % this is probably a bad name
     SchedulerPID ! {order_request, self()},
@@ -45,8 +51,11 @@ start() ->
     spawn(fun() -> loop() end).
 
 loop() ->
-    schedule_order(2, down),
-    timer:sleep(10000),
+    receive
+	{schedule_order, Floor, Direction, Caller} ->
+	    SchedulingResult = run_scheduler_for_order(Floor, Direction),
+	    Caller ! {scheduling_result, SchedulingResult}
+    end,
     loop().
 
 
@@ -54,7 +63,7 @@ loop() ->
 %% Function for modules to use
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-schedule_order(Floor, Direction) ->
+run_scheduler_for_order(Floor, Direction) -> % bad name in regards to interface function
     MemberList = connect_to_members(),
     case MemberList of
 	[] ->
