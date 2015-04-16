@@ -19,7 +19,14 @@ start(ElevatorType) ->
     spawn(fun() -> button_light_manager() end),
 
     QueuePID = queue:start(),
-    register(queue, QueuePID).
+    register(queue, QueuePID),
+    
+    SchedulerPID = scheduler:start(),
+    global:register_name(scheduler, SchedulerPID),
+    
+    spawn(fun() -> scheduler_manager() end).
+
+		  
 
 
 
@@ -54,8 +61,9 @@ driver_manager_init() -> % more dirty tricks
 driver_manager() ->
     receive
 	{new_order, Direction, Floor} ->
-	    queue:add(queue, Floor, Direction), % this needs to be edited when scheduler is made
+	    %queue:add(queue, Floor, Direction), % this needs to be edited when scheduler is made
 	    order_db:add_order(Floor, Direction),
+	    scheduler:schedule_order(global:whereis_name(scheduler), Floor, Direction), % not an ok way to do it. not sure if order is in DB?
 	    fsm:event_new_order(fsm);
 	{floor_reached, Floor} ->
 	    fsm:event_floor_reached(fsm),
@@ -71,6 +79,20 @@ button_light_manager() ->
     foreach_button(SetLightFunction),
     timer:sleep(200),
     button_light_manager().
+
+
+scheduler_manager() ->
+    CostCalculationFunction = fun(Floor, Direction) -> 0 end, %take all orders
+    {Floor, Direction, Status} = scheduler:request_order(global:whereis_name(scheduler), CostCalculationFunction),
+    case Status of
+	won ->
+	    queue:add(queue, Floor, Direction);
+	lost ->
+	    queue:remove(queue, Floor, Direction)
+    end,
+    scheduler_manager().
+			    
+		
 
 
 %% Helper functions (should maybe not be helper functions in this module?)
