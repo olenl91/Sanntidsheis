@@ -3,6 +3,8 @@
 
 -record(order, {floor, direction}). % might need something about origin to handle internal orders
 
+%% DB interface
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 install(Nodes) ->
     mnesia:create_schema(Nodes),
@@ -16,10 +18,23 @@ install(Nodes) ->
 
 
 add_order(Floor, Direction) ->
-    AddOrderTransaction = fun() ->
-				  mnesia:write(orders, #order{direction=Direction, floor=Floor}, write)
-			  end,
-    mnesia:activity(transaction, AddOrderTransaction).
+    case is_order(Floor, Direction) of
+	true ->
+	    already_exists;
+	false ->
+
+	    AddOrderTransaction = fun() ->
+					  mnesia:write(orders, #order{direction=Direction, floor=Floor}, write)
+				  end,
+	    Status = mnesia:activity(transaction, AddOrderTransaction),
+	    case Status of
+		ok ->
+		    ok;
+		transaction_abort ->
+		    error
+	    end
+    end.
+
 
 remove_order(Floor, Direction) ->
     RemoveOrderTransaction = fun() ->
