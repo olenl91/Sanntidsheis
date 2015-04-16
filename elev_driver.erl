@@ -23,7 +23,14 @@ set_stop_lamp(off) -> call_port({elev_set_stop_lamp, 0}).
 set_floor_indicator(Floor) -> % maybe add some special case when Floor > 3, or crash!!!!!?
     call_port({elev_set_floor_indicator, Floor}).
 
-set_button_lamp(Button, Floor, Value) -> call_port({elev_set_button_lamp, Button, Floor, Value}).
+%set_button_lamp(Floor, Direction, On)
+set_button_lamp(Floor, up, true) -> call_port({elev_set_button_lamp, 0, Floor, 1}); % 6 cases is to much, improve this
+set_button_lamp(Floor, up, false) -> call_port({elev_set_button_lamp, 0, Floor, 0});
+set_button_lamp(Floor, down, true) -> call_port({elev_set_button_lamp, 1, Floor, 1});
+set_button_lamp(Floor, down, false) -> call_port({elev_set_button_lamp, 1, Floor, 0});
+set_button_lamp(Floor, command, true) -> call_port({elev_set_button_lamp, 2, Floor, 1});
+set_button_lamp(Floor, command, false) -> call_port({elev_set_button_lamp, 2, Floor, 0}).
+
 
 poll_order_buttons() -> call_port({poll_order_buttons}).
 
