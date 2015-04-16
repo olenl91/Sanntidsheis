@@ -3,3 +3,4 @@
 {'elev_driver.erl', [{outdir, "ebin"}]}.
 {'queue.erl', [{outdir, "ebin"}]}.
 {'order_db.erl', [{outdir, "ebin"}]}.
+{'scheduler.erl', [{outdir, "ebin"}]}.
