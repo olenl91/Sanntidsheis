@@ -61,10 +61,13 @@ driver_manager_init() -> % more dirty tricks
 driver_manager() ->
     receive
 	{new_order, Direction, Floor} ->
-	    %queue:add(queue, Floor, Direction), % this needs to be edited when scheduler is made
-	    order_db:add_order(Floor, Direction),
-	    scheduler:schedule_order(global:whereis_name(scheduler), Floor, Direction), % not an ok way to do it. not sure if order is in DB?
-	    fsm:event_new_order(fsm);
+	    case order_db:add_order(Floor, Direction) of
+		ok ->
+		    scheduler:schedule_order(global:whereis_name(scheduler), Floor, Direction);
+		_Else ->
+		    do_nothing
+	    end,
+	    fsm:event_new_order(fsm); % this should probably not be here. Guess queue should have some callback?
 	{floor_reached, Floor} ->
 	    fsm:event_floor_reached(fsm),
 	    queue:floor_reached(queue, Floor)
