@@ -1,5 +1,10 @@
 -module(elev).
--export([start/1]).
+%-export([start/1]).
+-compile(export_all).
+
+-define(NUMBER_OF_FLOORS, 4). %should maybe be in other place?
+-define(BUTTON_TYPES, [up, down, command]). %should maybe be some other place?
+
 
 start(ElevatorType) ->
     DriverManagerPID = spawn(fun() -> driver_manager_init() end),
@@ -52,3 +57,23 @@ driver_manager() ->
 	    queue:floor_reached(queue, Floor)
     end,
     driver_manager().
+
+
+%% Helper functions (should maybe not be helper functions in this module?)
+%%%%%%%%%%%%%%%%%%%%%%%
+
+    
+%F(Floor)
+foreach_floor(F) -> %should maybe (probably) me moved to somewhere else
+    FloorIterator = fun(FloorIterator, Floor) ->
+			    if 
+				Floor == 0 ->
+				    F(Floor);
+				(Floor > 0) and (Floor =< ?NUMBER_OF_FLOORS-1) ->
+				    F(Floor),
+				    FloorIterator(FloorIterator, Floor-1)
+			    end
+		    end,
+    
+    FloorIterator(FloorIterator, ?NUMBER_OF_FLOORS-1),
+    ok.
