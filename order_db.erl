@@ -1,4 +1,4 @@
--module(mnesia_interface). % should maybe be called something as order_storage or similar
+-module(order_db).
 -compile(export_all).
 
 -record(order, {floor, direction}). % might need something about origin to handle internal orders
