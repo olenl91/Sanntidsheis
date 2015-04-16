@@ -7,12 +7,16 @@
 
 
 start(ElevatorType) ->
+    order_db:install([node()]),
+
     DriverManagerPID = spawn(fun() -> driver_manager_init() end),
     FsmManagerPid = spawn(fun() -> fsm_manager_init() end),
 
     elev_driver:start(DriverManagerPID, ElevatorType),
     FsmPID = fsm:start(FsmManagerPid),
     register(fsm, FsmPID),
+
+    spawn(fun() -> button_light_manager() end),
 
     QueuePID = queue:start(),
     register(queue, QueuePID).
@@ -57,6 +61,15 @@ driver_manager() ->
 	    queue:floor_reached(queue, Floor)
     end,
     driver_manager().
+
+button_light_manager() ->
+    SetLightFunction = fun(Floor, Direction) ->
+			       elev_driver:set_button_lamp(Floor, Direction, order_db:is_order(Floor, Direction))
+		       end,	 
+    
+    foreach_button(SetLightFunction),
+    timer:sleep(200),
+    button_light_manager().
 
 
 %% Helper functions (should maybe not be helper functions in this module?)
