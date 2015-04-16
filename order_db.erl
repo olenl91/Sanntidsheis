@@ -26,13 +26,7 @@ add_order(Floor, Direction) ->
 	    AddOrderTransaction = fun() ->
 					  mnesia:write(orders, #order{direction=Direction, floor=Floor}, write)
 				  end,
-	    Status = mnesia:activity(transaction, AddOrderTransaction),
-	    case Status of
-		ok ->
-		    ok;
-		transaction_abort ->
-		    error
-	    end
+	    ok = mnesia:activity(transaction, AddOrderTransaction)
     end.
 
 
