@@ -6,13 +6,19 @@
 -define(COOKIE, "erlang"). 
 -define(SEEK_PERIOD, 5000).
 
-
 listen_for_connections() ->
     {ok, RecvSocket} = gen_udp:open(?RECV_PORT, [list, {active,false}]),
-    {ok, {Adress, ?SEND_PORT, ?COOKIE}} = gen_udp:recv(RecvSocket, 0),
+    {ok, {Adress, ?SEND_PORT, ?COOKIE}} = gen_udp:recv(RecvSocket, 0), % kan kresje dersom Cookie er feil
     gen_udp:close(RecvSocket),
     Adress.
-	
+
+
+is_in_cluster(Node) ->
+    NodeList = [node()|nodes()],
+    lists:member(Node, NodeList).
+
+connect_to_node(Node) ->
+    net_adm:ping(Node). %might be not very intuitive return value, should maybe crash if not possible
 
 
 broadcast_loop() ->
