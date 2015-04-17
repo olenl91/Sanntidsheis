@@ -7,11 +7,18 @@
 -define(SEEK_PERIOD, 5000).
 
 
+start_auto_discovery() ->
+    spawn(fun() -> listen_for_connections() end),
+    spawn(fun() -> broadcast_loop() end).
+		  
+		  
+
+
 listen_for_connections() ->
     {ok, RecvSocket} = gen_udp:open(?RECV_PORT, [list, {active,false}]), % socket will never close?
     listen_for_connections(RecvSocket).    
 listen_for_connections(RecvSocket) ->
-    {ok, {_Adress, ?SEND_PORT, NodeName}} = gen_udp:recv(RecvSocket, 0), % kan kresje dersom Cookie er feil
+    {ok, {_Adress, ?SEND_PORT, NodeName}} = gen_udp:recv(RecvSocket, 0), % kan kresje dersom SEND_PORT er feil
     Node = list_to_atom(NodeName),
     case is_in_cluster(Node) of % maybe this test is useless? just try to connect anyway?
 	true ->
