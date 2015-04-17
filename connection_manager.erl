@@ -6,17 +6,19 @@
 %-define(COOKIE, "erlang"). 
 -define(SEEK_PERIOD, 5000).
 
+
 listen_for_connections() ->
-    {ok, RecvSocket} = gen_udp:open(?RECV_PORT, [list, {active,false}]),
+    {ok, RecvSocket} = gen_udp:open(?RECV_PORT, [list, {active,false}]), % socket will never close?
+    listen_for_connections(RecvSocket).    
+listen_for_connections(RecvSocket) ->
     {ok, {_Adress, ?SEND_PORT, NodeName}} = gen_udp:recv(RecvSocket, 0), % kan kresje dersom Cookie er feil
-    gen_udp:close(RecvSocket), % probably not smart to open and close connection all the time
     Node = list_to_atom(NodeName),
-    case is_in_cluster(Node) of
+    case is_in_cluster(Node) of % maybe this test is useless? just try to connect anyway?
 	true ->
-	    listen_for_connections();
+	    listen_for_connections(RecvSocket);
 	false ->
 	    connect_to_node(Node),
-	    listen_for_connections()
+	    listen_for_connections(RecvSocket)
     end.
 
 
