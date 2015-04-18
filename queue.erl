@@ -172,7 +172,7 @@ get_next_direction_from_schedule(Schedule) ->
 	[] ->
 	    stop;
 	_OrderList ->
-	    CheapestOrder = get_cheapest_order_from_schedule(Schedule),	    
+	    {_LeastCost, CheapestOrder} = get_cheapest_order_from_schedule(Schedule),	    
 	    direction(Schedule#schedule.elevator_next_floor, CheapestOrder#order.floor)
     end.
 
@@ -186,9 +186,7 @@ get_cheapest_order_from_schedule(Schedule) -> % maybe degrade to helper, maybe t
 						  Order#order.direction), Order}
 				end,
     CostOrderList = foreach_order(IncludeCostInListFunction, Schedule#schedule.orders),
-    {_LeastCost, CheapestOrder} = lists:min(CostOrderList),
-    CheapestOrder.
-
+    {_LeastCost, _CheapestOrder} = lists:min(CostOrderList).
 
 
 
