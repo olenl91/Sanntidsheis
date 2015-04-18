@@ -116,6 +116,18 @@ loop(Schedule) ->
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
+calculate_schedule_cost(Schedule) when Schedule#schedule.orders == [] -> % correct under the assumption that order cost is linear
+    0;
+calculate_schedule_cost(Schedule) ->
+    {OrderCost, CheapestOrder} = get_cheapest_order_from_schedule(Schedule),
+    NewOrderList = lists:delete(CheapestOrder, Schedule#schedule.orders),
+    NewDirection = CheapestOrder#order.direction,
+    NewNextFloor = CheapestOrder#order.floor,
+    NewSchedule = Schedule#schedule{orders=NewOrderList, elevator_direction=NewDirection, elevator_next_floor = NewNextFloor}, 
+    OrderCost + calculate_schedule_cost(NewSchedule).
+    
+		
+
 % Removes all orders at floor, should possibly be extended to be more precice
 update_schedule_at_stop(Schedule) -> % and update direction, realy hard function to grasp, that's not good
     ElevatorNextFloor = Schedule#schedule.elevator_next_floor,
