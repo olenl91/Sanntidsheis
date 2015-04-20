@@ -32,6 +32,7 @@ sync([NodeToSync|NextNodes]) ->
 do_sync([]) -> ok;
 do_sync(NodeToSync) ->
     register(sync, self()),
+    case NodeToSync == node() of   %%maybe a rpc will work instead
         true ->
             OrderList = ets:tab2list(orders);
         false ->
