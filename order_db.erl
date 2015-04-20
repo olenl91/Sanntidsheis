@@ -20,7 +20,7 @@ remove_order(Floor, Direction) ->
 %% Syncing
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-sync_ets([NodeList]) ->
+sync_ets() ->
     NodeList = lists:append([[node()],nodes()]),
     sync(NodeList).
 
@@ -70,7 +70,7 @@ insert_order(Floor, Direction) ->
     end.
 
 delete_order(Floor, Direction) ->
-    ets:delete(orders, #order{floor = Floor, direction = Direction}).
+    ets:delete(orders, #order{floor = Floor, direction = Direction}).  %Needs to be fixed, somehow
 
 is_order(Floor, Direction) ->
     case ets:match(orders, #order{floor = Floor, direction = Direction}) of
