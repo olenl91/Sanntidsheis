@@ -41,24 +41,35 @@ is_order(Floor, Direction) ->
 
 add_new_node_to_cluster(Node) ->
 	net_adm:ping(Node),
-    	rpc:call(Node, application, start, [mnesia]),
+    rpc:call(Node, application, start, [mnesia]),
 	mnesia:change_config(extra_db_nodes, [Node]),
 	mnesia:change_table_copy_type(schema, Node, ram_copies),
 	mnesia:add_table_copy(orders, Node, ram_copies).
+
+reinit_mnesia_cluster() ->
+	rpc:multicall(mnesia, stop, []),
+	mnesia:delete_schema(lists:append([[node()], nodes()])),
+	install(lists:append([[node()], nodes()])).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% functions used to reconnect a node after a netsplit
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 sync_mnesia() ->
-	rpc:multicall(mnesia, 'dump_to_textfile', ['BackupMnesia']),
-	reinit_mnesia_cluster(),
-	rpc:multicall(mnesia, 'load_textfile', ['BackupMnesia']).
-	
-reinit_mnesia_cluster() -> 
-	rpc:multicall(mnesia, stop, []),
-	mnesia:delete_schema(lists:append([[node()], nodes()])),
-	install(lists:append([[node()], nodes()])).
+    NodeList = mnesia:system_info(db_nodes),
+    rpc:multicall(mnesia, 'dump_to_textfile', ['BackupMnesia']),
+    sync(NodeList).
+
+sync([]) -> ok;
+sync([NodeToSync|NextNodes]) ->
+    do_sync(NodeToSync),
+    sync(NextNodes).
+
+do_sync(Node) ->
+    rpc:call(Node, application, stop, [mnesia]),
+    rpc:call(Node, mnesia, delete_scheme, [Node]),
+    add_new_node_to_cluster(Node),
+    rpc:call(Node,mnesia, load_textfile, ['BackupMnesia']).
 
 %%%%%%%%%%%%%%%%%%%%%%
 %% helper functions
