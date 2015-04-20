@@ -16,7 +16,42 @@ add_order(Floor, Direction) ->
 remove_order(Floor, Direction) ->
     rpc:multicall(order_db, delete_order, [Floor, Direction]).
 
-%% sync_ets() %%% to do
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Syncing
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+sync_ets([NodeList]) ->
+    NodeList = lists:append([[node()],nodes()]),
+    sync(NodeList).
+
+sync([]) -> ok;
+sync([NodeToSync|NextNodes]) ->
+    do_sync(NodeToSync),
+    sync(NextNodes).
+
+do_sync([]) -> ok;
+do_sync(NodeToSync) ->
+    register(sync, self()),
+        true ->
+            OrderList = ets:tab2list(orders);
+        false ->
+            rpc:call(NodeToSync, order_db, send_Data,[node()]),
+            receive
+                    {NodeToSync, OrderList} ->
+                        ok
+            end
+        end,
+        sync_orders(OrderList).
+
+sync_orders([OrderToSync|NextOrders]) ->
+    do_sync_orders(OrderToSync),
+    sync_orders(NextOrders).
+
+do_sync_orders(#order{floor = Floor, direction = Direction}) ->
+    add_order(Floor, Direction).
+
+send_Data(ToNode) ->
+    {sync, ToNode} ! {[node()], ets:tab2list(orders)}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% DB interface
@@ -43,10 +78,3 @@ is_order(Floor, Direction) ->
         _ ->
             true
         end.
-
-
-
-
-
-
-
