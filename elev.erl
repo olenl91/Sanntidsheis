@@ -7,27 +7,28 @@
 
 
 start(ElevatorType) ->
-    %order_db:install([node()]), %do manual install instead
-
+    connection_manager:start_auto_discovery(),
+    
+    OrderStorageManagerPID = spawn(fun() -> order_storage_manager() end),
+    OrderStoragePID = order_storage:start(OrderStorageManagerPID),
+    register(order_storage, OrderStoragePID),
+    
     DriverManagerPID = spawn(fun() -> driver_manager_init() end),
     FsmManagerPid = spawn(fun() -> fsm_manager_init() end),
 
     elev_driver:start(DriverManagerPID, ElevatorType),
     FsmPID = fsm:start(FsmManagerPid),
     register(fsm, FsmPID),
-
+    
     spawn(fun() -> button_light_manager() end),
-
+    
     QueueManagerPID = spawn(fun() -> queue_manager() end),
     QueuePID = queue:start(QueueManagerPID),
-    register(queue, QueuePID),
+    register(queue, QueuePID).
     
-    SchedulerPID = scheduler:start(),
-    global:register_name(scheduler, SchedulerPID),
     
-    spawn(fun() -> scheduler_manager() end).
 
-		  
+
 
 
 
@@ -37,6 +38,8 @@ fsm_manager_init() -> % dirty hack, plz fix
     fsm_manager().
 fsm_manager() ->
     receive
+	{init, completed} ->
+	    queue:make_stop(queue);
 	{direction, request, Caller} ->
 	    Direction = queue:get_next_direction(queue),
 	    Caller ! {direction, response, Direction};
@@ -62,12 +65,7 @@ driver_manager_init() -> % more dirty tricks
 driver_manager() ->
     receive
 	{new_order, Direction, Floor} ->
-	    case order_db:add_order(Floor, Direction) of
-		ok ->
-		    scheduler:schedule_order(global:whereis_name(scheduler), Floor, Direction);
-		_Else ->
-		    do_nothing
-	    end;
+	    order_storage:add_order(Floor, Direction);  % this schedule event can block floor_reached
 	{floor_reached, Floor} ->
 	    fsm:event_floor_reached(fsm),
 	    queue:floor_reached(queue, Floor)
@@ -76,7 +74,7 @@ driver_manager() ->
 
 button_light_manager() ->
     SetLightFunction = fun(Floor, Direction) ->
-			       elev_driver:set_button_lamp(Floor, Direction, order_db:is_order(Floor, Direction))
+			       elev_driver:set_button_lamp(Floor, Direction, order_storage:is_order(Floor, Direction)) % hard line to grasp
 		       end,	 
     
     foreach_button(SetLightFunction),
@@ -84,22 +82,21 @@ button_light_manager() ->
     button_light_manager().
 
 
-scheduler_manager() ->
-    CostCalculationFunction = fun(Floor, Direction) -> 0 end, %take all orders
-    {Floor, Direction, Status} = scheduler:request_order(global:whereis_name(scheduler), CostCalculationFunction),
-    case Status of
-	won ->
+order_storage_manager() ->    
+    receive
+	{bid_request, Floor, Direction, Caller} ->
+	    Caller ! {bid_price, queue:get_order_cost(queue, Floor, Direction)};
+	{handle_order, Floor, Direction, _Caller} ->
 	    queue:add(queue, Floor, Direction),
-	    fsm:event_new_order(fsm);	
-	lost ->
-	    queue:remove(queue, Floor, Direction)
+	    fsm:event_new_order(fsm) % maybe queue should do this?
     end,
-    scheduler_manager().
+    
+    order_storage_manager().
 
 queue_manager() ->			    
     receive
 	{order_served, Floor, Direction} ->
-	    order_db:remove_order(Floor, Direction) %no guarantee for this action will happen
+	    order_storage:remove_order(Floor, Direction)
     end,
     queue_manager().
 
