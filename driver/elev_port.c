@@ -1,6 +1,7 @@
 #include "elev.h"
 #include <unistd.h>
 #include <stdint.h>
+#include <stdlib.h>
 
 typedef uint8_t byte;
 
@@ -110,6 +111,9 @@ int main()
 	      break;
 	  case(12):
 	      poll_floor_sensors();
+		  break;
+	  case(13):
+		  exit(0);
 
 	  }
       }

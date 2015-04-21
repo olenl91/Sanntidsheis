@@ -48,7 +48,7 @@ start(Listener, ElevatorType) ->
     spawn(fun() -> poll_everything() end).
 
 stop() ->
-    driver ! stop.
+    driver ! {call, self(), {stop}}.
 
 init_port(ExtPrg, Listener) ->
     register(driver, self()),
@@ -76,7 +76,7 @@ loop(Port, Listener) ->
 	{Port, {data, [12, Floor]}} ->
 	    floor_reached(Listener, Floor),
 	    loop(Port, Listener);
-	stop ->
+	{Port, {data, [13]}} ->
 	    Port ! {self(), close},
 	    receive
 		{Port, closed} ->
@@ -105,4 +105,5 @@ encode({elev_set_floor_indicator, Floor}) -> [8, Floor];
 encode({elev_get_button_signal, Button, Floor}) -> [9, Button, Floor];
 encode({elev_set_button_lamp, Button, Floor, Value}) -> [10, Button, Floor, Value];
 encode({poll_order_buttons}) -> [11];
-encode({poll_floor_sensors}) -> [12].
+encode({poll_floor_sensors}) -> [12];
+encode({stop}) -> [13].
