@@ -2,8 +2,6 @@
 -export([start/2, stop/0, init_port/2]).
 -export([init/1, set_motor_direction/1, set_door_open_lamp/1, set_stop_lamp/1, set_floor_indicator/1, set_button_lamp/3]).
 
-
-
 %% Module API
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -31,17 +29,14 @@ set_button_lamp(Floor, down, false) -> call_port({elev_set_button_lamp, 1, Floor
 set_button_lamp(Floor, command, true) -> call_port({elev_set_button_lamp, 2, Floor, 1});
 set_button_lamp(Floor, command, false) -> call_port({elev_set_button_lamp, 2, Floor, 0}).
 
-
 poll_order_buttons() -> call_port({poll_order_buttons}).
 
 poll_floor_sensors() -> call_port({poll_floor_sensors}).
-
 
 %% Call backs
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 new_order(Listener, Direction, Floor) -> Listener ! {new_order, Direction, Floor}.
 floor_reached(Listener, Floor) -> Listener ! {floor_reached, Floor}.
-
 
 %% Process functions
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -51,10 +46,9 @@ start(Listener, ElevatorType) ->
     timer:sleep(10),
     init(ElevatorType),
     spawn(fun() -> poll_everything() end).
-		  
+
 stop() ->
     driver ! stop.
-
 
 init_port(ExtPrg, Listener) ->
     register(driver, self()),
@@ -67,9 +61,9 @@ call_port(Msg) ->
 
 loop(Port, Listener) ->
     receive
-	{call, Caller, Msg} ->
+	{call, _Caller, Msg} ->
 	    Port ! {self(), {command, encode(Msg)}},
-	    loop(Port, Listener); 
+	    loop(Port, Listener);
 	{Port, {data, [11, 0, Floor]}} ->
 	    new_order(Listener, up, Floor),
 	    loop(Port, Listener);
@@ -88,7 +82,7 @@ loop(Port, Listener) ->
 		{Port, closed} ->
 		    exit(normal)
 	    end;
-	{'EXIT', Port, Reason} ->
+	{'EXIT', Port, _Reason} ->
 	    exit(port_terminated)
     end.
 
@@ -98,11 +92,8 @@ poll_everything() ->
     timer:sleep(10),
     poll_everything().
 
-
 %% Helper functions
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-
 encode({elev_init, Type}) -> [1, Type];
 encode({elev_set_motor_direction, Dirn}) -> [2, Dirn];
 encode({elev_set_door_open_lamp, Value}) -> [3, Value];
@@ -115,5 +106,3 @@ encode({elev_get_button_signal, Button, Floor}) -> [9, Button, Floor];
 encode({elev_set_button_lamp, Button, Floor, Value}) -> [10, Button, Floor, Value];
 encode({poll_order_buttons}) -> [11];
 encode({poll_floor_sensors}) -> [12].
-    
-
